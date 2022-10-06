@@ -348,6 +348,41 @@ var isOptedOut = MParticle.getOptOut();
 MParticle.setOptOut(!isOptedOut);
 ```
 
+## Braze (AppboyKit)
+
+A lot of the features from braze are automatically supported by the mParticle SDK. However, content-cards is not supported with the current release. We can enable the appboy kit and call all content-card features directly on the instance of the kit. Further documentation can be found here: 
+
+iOS: https://docs.mparticle.com/developers/sdk/ios/kits/
+Android: https://docs.mparticle.com/developers/sdk/android/kits/
+
+### Content Cards
+
+The mParticle SDK is extended to support fetching content cards via the appboy kit instance. 
+
+First register an event listener with the SDK with a callback that will be invoked with content cards that are fetched for a user.
+
+```
+cardRefreshListener = MParticle.addListener<BrazeContentCard>(
+        'contentCardsUpdated',
+        (cardsFromBridge) => {
+            // once card is refreshed, this callback will be invoked
+        }
+    );
+```
+Remove the listener.
+
+```
+cardRefreshListener.remove();
+```
+
+Once the listener is registered, simply use the SDK to refresh the content cards.
+
+```
+MParticle.AppBoy.requestBrazeContentCardsRefresh();
+```
+
+
+
 ## Push Registration
 
 The method `MParticle.logPushRegistration()` accepts 2 parameters. For Android, provide both the `pushToken` and `senderId`. For iOS, provide the push token in the first parameter, and simply pass `null` for the second parameter.

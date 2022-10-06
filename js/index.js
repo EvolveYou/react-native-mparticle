@@ -1,6 +1,11 @@
 'use strict'
 
-import { NativeModules } from 'react-native'
+import {
+  DeviceEventEmitter,
+  NativeEventEmitter,
+  NativeModules,
+  Platform
+} from 'react-native';
 
 // ******** Constants ********
 
@@ -621,6 +626,31 @@ class Event {
   }
 }
 
+class AppBoy {
+  static eventEmitter = Platform.select({
+    ios: new NativeEventEmitter(NativeModules.MParticle),
+    android: DeviceEventEmitter
+  });
+
+  /**
+   * Subscribes to the specific SDK event.
+   * When you want to stop listening, call `.remove()` on the returned
+   * subscription.
+   * @param {Events} event
+   * @param {function} subscriber
+   */
+  static addListener(event, subscriber) {
+    return this.eventEmitter.addListener(event, subscriber);
+  }
+
+  /**
+   * Requests a refresh of the content cards from Braze's servers.
+   */
+  static requestBrazeContentCardsRefresh() {
+    NativeModules.MParticle.requestContentCardsRefresh();
+  }
+}
+
 class MParticleError {
   constructor (errorResponse) {
     this.httpCode = errorResponse.httpCode
@@ -659,6 +689,7 @@ const MParticle = {
   MParticleError,
   GDPRConsent,
   CCPAConsent,
+  AppBoy,
 
   logEvent,             // Methods
   logMPEvent,
