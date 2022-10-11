@@ -1,13 +1,101 @@
 #import "RNMParticle.h"
 #import "mParticle.h"
 #import <React/RCTConvert.h>
+#import "Appboy-iOS-SDK/AppboyKit.h"
+#import "MPEnums.h"
 
 @interface MParticleUser ()
 
 - (void)setUserId:(NSNumber *)userId;
 @end
 
-@implementation RNMParticle
+@implementation RNMParticle {
+    bool hasListeners;
+}
+
+static NSString *const kContentCardsUpdatedEvent = @"contentCardsUpdated";
+
+- (NSArray<NSString *> *)supportedEvents {
+   return @[
+      kContentCardsUpdatedEvent
+    ];
+}
+
+static NSDictionary *RCTFormatContentCard(ABKContentCard *card) {
+  NSMutableDictionary *formattedContentCardData = [NSMutableDictionary dictionary];
+
+  formattedContentCardData[@"id"] = card.idString;
+  formattedContentCardData[@"created"] = @(card.created);
+  formattedContentCardData[@"expiresAt"] = @(card.expiresAt);
+  formattedContentCardData[@"viewed"] = @(card.viewed);
+  formattedContentCardData[@"clicked"] = @(card.clicked);
+  formattedContentCardData[@"pinned"] = @(card.pinned);
+  formattedContentCardData[@"dismissed"] = @(card.dismissed);
+  formattedContentCardData[@"dismissible"] = @(card.dismissible);
+  formattedContentCardData[@"url"] = RCTNullIfNil(card.urlString);
+  formattedContentCardData[@"openURLInWebView"] = @(card.openUrlInWebView);
+
+  formattedContentCardData[@"extras"] = card.extras ? RCTJSONClean(card.extras) : @{};
+
+  if ([card isKindOfClass:[ABKCaptionedImageContentCard class]]) {
+    ABKCaptionedImageContentCard *captionedCard = (ABKCaptionedImageContentCard *)card;
+    formattedContentCardData[@"image"] = captionedCard.image;
+    formattedContentCardData[@"imageAspectRatio"] = @(captionedCard.imageAspectRatio);
+    formattedContentCardData[@"title"] = captionedCard.title;
+    formattedContentCardData[@"cardDescription"] = captionedCard.cardDescription;
+    formattedContentCardData[@"domain"] = RCTNullIfNil(captionedCard.domain);
+    formattedContentCardData[@"type"] = @"Captioned";
+  }
+
+  if ([card isKindOfClass:[ABKBannerContentCard class]]) {
+    ABKBannerContentCard *bannerCard = (ABKBannerContentCard *)card;
+    formattedContentCardData[@"image"] = bannerCard.image;
+    formattedContentCardData[@"imageAspectRatio"] = @(bannerCard.imageAspectRatio);
+    formattedContentCardData[@"type"] = @"Banner";
+  }
+
+  if ([card isKindOfClass:[ABKClassicContentCard class]]) {
+    ABKClassicContentCard *classicCard = (ABKClassicContentCard *)card;
+    formattedContentCardData[@"image"] = RCTNullIfNil(classicCard.image);
+    formattedContentCardData[@"title"] = classicCard.title;
+    formattedContentCardData[@"cardDescription"] = classicCard.cardDescription;
+    formattedContentCardData[@"domain"] = RCTNullIfNil(classicCard.domain);
+    formattedContentCardData[@"type"] = @"Classic";
+  }
+
+  return formattedContentCardData;
+}
+
+- (void)startObserving {
+ hasListeners = YES;
+ [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(handleContentCardsUpdated:)
+                                               name:ABKContentCardsProcessedNotification
+                                             object:nil];
+}
+
+- (void)stopObserving {
+    hasListeners = NO;
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
+- (void)handleContentCardsUpdated:(NSNotification *)notification {
+ BOOL updateIsSuccessful = [notification.userInfo[ABKContentCardsProcessedIsSuccessfulKey] boolValue];
+ if (hasListeners && updateIsSuccessful) {
+    Appboy *appboy = [[MParticle sharedInstance] kitInstance:@(MPKitInstanceAppboy)];
+
+    if (appboy){
+        NSArray<ABKContentCard *> *cards = [[appboy contentCardsController] getContentCards];
+        
+        NSMutableArray *mappedCards = [NSMutableArray arrayWithCapacity:[cards count]];
+        [cards enumerateObjectsUsingBlock:^(id card, NSUInteger idx, BOOL *stop) {
+          [mappedCards addObject:RCTFormatContentCard(card)];
+        }];
+
+        [self sendEventWithName:kContentCardsUpdatedEvent body:mappedCards];
+    }
+ }
+}
 
 RCT_EXTERN void RCTRegisterModule(Class);
 
@@ -152,6 +240,14 @@ RCT_EXPORT_METHOD(getUserAttributes:(NSString *)userId completion:(RCTResponseSe
     MParticleUser *selectedUser = [[MParticleUser alloc] init];
     selectedUser.userId = [NSNumber numberWithLong:userId.longLongValue];
     completion(@[[NSNull null], [selectedUser userAttributes]]);
+}
+
+RCT_EXPORT_METHOD(requestContentCardsRefresh) {
+    Appboy *appboy = [[MParticle sharedInstance] kitInstance:@(MPKitInstanceAppboy)];
+
+    if (appboy){
+        [appboy requestContentCardsRefresh];
+    }
 }
 
 RCT_EXPORT_METHOD(setUserTag:(NSString *)userId tag:(NSString *)tag)
