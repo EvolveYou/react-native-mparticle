@@ -651,6 +651,18 @@ class AppBoy {
   static requestBrazeContentCardsRefresh () {
     NativeModules.MParticle.requestContentCardsRefresh()
   }
+
+  static logContentCardImpression(cardId) {
+    NativeModules.MParticle.logContentCardImpression(cardId);
+  }
+
+  static logContentCardClicked(cardId) {
+    NativeModules.MParticle.logContentCardClicked(cardId);
+  }
+
+  static logContentCardDismissed(cardId) {
+    NativeModules.MParticle.logContentCardDismissed(cardId);
+  }
 }
 
 class MParticleError {
