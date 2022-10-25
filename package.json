@@ -1,10 +1,10 @@
 {
-  "name": "react-native-mparticle",
+  "name": "@evolve-you/react-native-mparticle",
   "description": "React Native module for mParticle",
-  "homepage": "https://www.mparticle.com",
+  "homepage": "https://github.com/EvolveYou/react-native-mparticle",
   "license": "Apache-2.0",
-  "repository": "mParticle/react-native-mparticle",
-  "version": "2.7.6",
+  "repository": "EvolveYou/react-native-mparticle",
+  "version": "1.0.0",
   "main": "js/index.js",
   "scripts": {
     "test": "./node_modules/standard/bin/cmd.js",
