@@ -40,6 +40,9 @@ public class MParticleUserTest {
             public WritableMap getWritableMap() {
                 return new MockMap();
             }
+
+            @Override
+            public void subscribeToContentCardsUpdatedEvent() { }
         };
     }
 

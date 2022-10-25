@@ -15,6 +15,9 @@ import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeMap;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableNativeArray;
+import com.facebook.react.modules.core.DeviceEventManagerModule;
+import com.facebook.react.bridge.Promise;
+
 import com.mparticle.AttributionResult;
 import com.mparticle.MParticle;
 import com.mparticle.MPEvent;
@@ -38,6 +41,14 @@ import com.mparticle.identity.TaskSuccessListener;
 import com.mparticle.internal.Logger;
 import com.mparticle.UserAttributeListener;
 
+import com.braze.Braze;
+import com.appboy.models.cards.Card;
+import com.appboy.models.cards.BannerImageCard;
+import com.appboy.models.cards.CaptionedImageCard;
+
+import com.braze.events.ContentCardsUpdatedEvent;
+import com.braze.events.IEventSubscriber;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -49,12 +60,20 @@ public class MParticleModule extends ReactContextBaseJavaModule {
 
 
     private final static String LOG_TAG = "MParticleModule";
+    private IEventSubscriber<ContentCardsUpdatedEvent> mContentCardsUpdatedSubscriber;
+
+    private static final String CONTENT_CARDS_UPDATED_EVENT_NAME = "contentCardsUpdated";
+
+    private final List<Card> mContentCards = new ArrayList<>();
+
+    private long mContentCardsUpdatedAt = 0;
 
     ReactApplicationContext reactContext;
 
     public MParticleModule(ReactApplicationContext reactContext) {
         super(reactContext);
         this.reactContext = reactContext;
+        subscribeToContentCardsUpdatedEvent();
     }
 
     @Override
@@ -91,6 +110,103 @@ public class MParticleModule extends ReactContextBaseJavaModule {
     public void logScreenEvent(final String event, final ReadableMap attributesMap, final boolean shouldUploadEvent) {
         Map<String, String> attributes = ConvertStringMap(attributesMap);
         MParticle.getInstance().logScreen(event, attributes, shouldUploadEvent);
+    }
+
+    @ReactMethod
+    public void requestContentCardsRefresh() {
+        boolean isKitActive = MParticle.getInstance().isKitActive(MParticle.ServiceProviders.APPBOY);
+        if (isKitActive) {
+            // direct braze call to request refresh
+            Braze.getInstance(getReactApplicationContext()).requestContentCardsRefresh(false);
+        }
+    }
+
+    public void subscribeToContentCardsUpdatedEvent() {
+        Braze.getInstance(getReactApplicationContext())
+                .removeSingleSubscription(mContentCardsUpdatedSubscriber, ContentCardsUpdatedEvent.class);
+        mContentCardsUpdatedSubscriber = new IEventSubscriber<ContentCardsUpdatedEvent>() {
+            @Override
+            public void trigger(ContentCardsUpdatedEvent event) {
+                updateContentCardsIfNeeded(event);
+                if (getReactApplicationContext().hasActiveCatalystInstance()) {
+                    getReactApplicationContext()
+                            .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                            .emit(CONTENT_CARDS_UPDATED_EVENT_NAME, mapContentCards(event.getAllCards()));
+                }
+            }
+        };
+        Braze.getInstance(getReactApplicationContext()).subscribeToContentCardsUpdates(mContentCardsUpdatedSubscriber);
+    }
+
+    private void updateContentCardsIfNeeded(ContentCardsUpdatedEvent event) {
+        if (event.getLastUpdatedInSecondsFromEpoch() > mContentCardsUpdatedAt) {
+            mContentCardsUpdatedAt = event.getLastUpdatedInSecondsFromEpoch();
+            mContentCards.clear();
+            mContentCards.addAll(event.getAllCards());
+        }
+    }
+
+    private WritableArray mapContentCards(List<Card> cardsList) {
+        WritableArray cards = Arguments.createArray();
+        for (Card card : cardsList.toArray(new Card[0])) {
+            cards.pushMap(mapContentCard(card));
+        }
+        return cards;
+    }
+
+    private WritableMap mapContentCard(Card card) {
+        WritableMap mappedCard = Arguments.createMap();
+        mappedCard.putString("id", card.getId());
+        mappedCard.putDouble("created", card.getCreated());
+        mappedCard.putDouble("expiresAt", card.getExpiresAt());
+        mappedCard.putBoolean("viewed", card.getViewed());
+        mappedCard.putBoolean("isPinned", card.isPinned());
+        mappedCard.putBoolean("clicked", card.isClicked());
+        mappedCard.putBoolean("dismissed", card.isDismissed());
+        mappedCard.putString("url", card.getUrl());
+        mappedCard.putBoolean("openURLInWebView", card.getOpenUriInWebView());
+
+        // Extras
+        WritableMap extras = Arguments.createMap();
+        for (Map.Entry<String, String> entry : card.getExtras().entrySet()) {
+            extras.putString(entry.getKey(), entry.getValue());
+        }
+        mappedCard.putMap("extras", extras);
+
+        // Map according to card type
+        switch (card.getCardType()) {
+            case BANNER:
+                mappedCard.merge(bannerImageCardToWritableMap((BannerImageCard) card));
+                break;
+            case CAPTIONED_IMAGE:
+                mappedCard.merge(captionedImageCardToWritableMap((CaptionedImageCard)card));
+                break;
+            case DEFAULT:
+            case CONTROL:
+                break;
+        }
+
+        return mappedCard;
+    }
+
+    private WritableMap captionedImageCardToWritableMap(CaptionedImageCard card) {
+        WritableMap mappedCard = Arguments.createMap();
+        mappedCard.putString("image", card.getImageUrl());
+        mappedCard.putDouble("imageAspectRatio", card.getAspectRatio());
+        mappedCard.putString("title", card.getTitle());
+        mappedCard.putString("cardDescription", card.getDescription());
+        mappedCard.putString("domain", card.getDomain());
+        mappedCard.putString("type", "Captioned");
+        return mappedCard;
+    }
+
+    private WritableMap bannerImageCardToWritableMap(BannerImageCard card) {
+        WritableMap mappedCard = Arguments.createMap();
+        mappedCard.putString("image", card.getImageUrl());
+        mappedCard.putDouble("imageAspectRatio", card.getAspectRatio());
+        mappedCard.putString("domain", card.getDomain());
+        mappedCard.putString("type", "Banner");
+        return mappedCard;
     }
 
     @ReactMethod

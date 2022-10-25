@@ -34,6 +34,7 @@ buildscript {
 
 repositories {
     mavenCentral()
+    maven { url "https://appboy.github.io/appboy-android-sdk/sdk" }
     google()
 }
 
@@ -48,6 +49,7 @@ dependencies {
     // (See https://github.com/mparticle/mparticle-android-sdk for the latest version)
     //
     compileOnly 'com.mparticle:android-core:[5.9.3, )'
+    implementation 'com.mparticle:android-appboy-kit:5+'
 
     //
     // And, if you want to include kits, you can do so as follows:
