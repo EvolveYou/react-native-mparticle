@@ -5,7 +5,7 @@ import {
   NativeEventEmitter,
   NativeModules,
   Platform
-} from 'react-native';
+} from 'react-native'
 
 // ******** Constants ********
 
@@ -627,10 +627,12 @@ class Event {
 }
 
 class AppBoy {
-  static eventEmitter = Platform.select({
-    ios: new NativeEventEmitter(NativeModules.MParticle),
-    android: DeviceEventEmitter
-  });
+  constructor () {
+    this.eventEmitter = Platform.select({
+      ios: new NativeEventEmitter(NativeModules.MParticle),
+      android: DeviceEventEmitter
+    })
+  }
 
   /**
    * Subscribes to the specific SDK event.
@@ -639,15 +641,15 @@ class AppBoy {
    * @param {Events} event
    * @param {function} subscriber
    */
-  static addListener(event, subscriber) {
-    return this.eventEmitter.addListener(event, subscriber);
+  static addListener (event, subscriber) {
+    return this.eventEmitter.addListener(event, subscriber)
   }
 
   /**
    * Requests a refresh of the content cards from Braze's servers.
    */
-  static requestBrazeContentCardsRefresh() {
-    NativeModules.MParticle.requestContentCardsRefresh();
+  static requestBrazeContentCardsRefresh () {
+    NativeModules.MParticle.requestContentCardsRefresh()
   }
 }
 

@@ -35,7 +35,10 @@ public class IdentityApiTest {
         MParticle.setInstance(Mockito.mock(MParticle.class));
         Mockito.when(MParticle.getInstance().Identity()).thenReturn(Mockito.mock(IdentityApi.class));
         Mockito.when(MParticle.getInstance().Identity().getUser(null)).thenReturn(null);
-        identityApi = new MParticleModule(Mockito.mock(ReactApplicationContext.class));
+        identityApi = new MParticleModule(Mockito.mock(ReactApplicationContext.class)) {
+            @Override
+            public void subscribeToContentCardsUpdatedEvent() { }
+        };
     }
 
 

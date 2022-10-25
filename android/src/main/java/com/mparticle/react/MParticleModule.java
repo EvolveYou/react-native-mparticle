@@ -121,7 +121,7 @@ public class MParticleModule extends ReactContextBaseJavaModule {
         }
     }
 
-    private void subscribeToContentCardsUpdatedEvent() {
+    public void subscribeToContentCardsUpdatedEvent() {
         Braze.getInstance(getReactApplicationContext())
                 .removeSingleSubscription(mContentCardsUpdatedSubscriber, ContentCardsUpdatedEvent.class);
         mContentCardsUpdatedSubscriber = new IEventSubscriber<ContentCardsUpdatedEvent>() {
