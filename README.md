@@ -381,6 +381,14 @@ Once the listener is registered, simply use the SDK to refresh the content cards
 MParticle.AppBoy.requestBrazeContentCardsRefresh();
 ```
 
+Content Card Performance.
+
+```
+MParticle.AppBoy.logBrazeContentCardImpression();
+MParticle.AppBoy.logBrazeContentCardClicked();
+MParticle.AppBoy.logBrazeContentCardDismissed();
+```
+
 
 
 ## Push Registration
