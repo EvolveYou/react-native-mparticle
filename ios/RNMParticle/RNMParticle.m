@@ -250,6 +250,43 @@ RCT_EXPORT_METHOD(requestContentCardsRefresh) {
     }
 }
 
+RCT_EXPORT_METHOD(logContentCardClicked:(NSString *)idString) {
+    ABKContentCard *cardToClick =  [self getContentCardById:idString];
+    if (cardToClick) {
+        [cardToClick logContentCardClicked];
+    }
+}
+
+RCT_EXPORT_METHOD(logContentCardDismissed:(NSString *)idString) {
+    ABKContentCard *cardToClick = [self getContentCardById:idString];
+    if (cardToClick) {
+        [cardToClick logContentCardDismissed];
+    }
+}
+
+RCT_EXPORT_METHOD(logContentCardImpression:(NSString *)idString) {
+    ABKContentCard *cardToClick =  [self getContentCardById:idString];
+    if (cardToClick) {
+        [cardToClick logContentCardImpression];
+    }
+}
+
+- (nullable ABKContentCard *)getContentCardById:(NSString *)idString {
+    Appboy *appboy = [[MParticle sharedInstance] kitInstance:@(MPKitInstanceAppboy)];
+    
+    if (appboy){
+        NSArray<ABKContentCard *> *cards = [[appboy contentCardsController] getContentCards];
+        NSPredicate *predicate = [NSPredicate predicateWithFormat:@"idString == %@", idString];
+        NSArray *filteredArray = [cards filteredArrayUsingPredicate:predicate];
+
+        if ([filteredArray count]) {
+          return filteredArray[0];
+        }
+    }
+
+    return nil;
+}
+
 RCT_EXPORT_METHOD(setUserTag:(NSString *)userId tag:(NSString *)tag)
 {
     MParticleUser *selectedUser = [[MParticleUser alloc] init];

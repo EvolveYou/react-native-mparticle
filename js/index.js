@@ -652,16 +652,16 @@ class AppBoy {
     NativeModules.MParticle.requestContentCardsRefresh()
   }
 
-  static logContentCardImpression(cardId) {
-    NativeModules.MParticle.logContentCardImpression(cardId);
+  static logBrazeContentCardImpression (cardId) {
+    NativeModules.MParticle.logContentCardImpression(cardId)
   }
 
-  static logContentCardClicked(cardId) {
-    NativeModules.MParticle.logContentCardClicked(cardId);
+  static logBrazeContentCardClicked (cardId) {
+    NativeModules.MParticle.logContentCardClicked(cardId)
   }
 
-  static logContentCardDismissed(cardId) {
-    NativeModules.MParticle.logContentCardDismissed(cardId);
+  static logBrazeContentCardDismissed (cardId) {
+    NativeModules.MParticle.logContentCardDismissed(cardId)
   }
 }
 
@@ -703,7 +703,7 @@ const MParticle = {
   MParticleError,
   GDPRConsent,
   CCPAConsent,
-  AppBoy,
+  AppBoy: new AppBoy(),
 
   logEvent,             // Methods
   logMPEvent,
