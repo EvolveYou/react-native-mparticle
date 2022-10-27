@@ -627,12 +627,10 @@ class Event {
 }
 
 class AppBoy {
-  constructor () {
-    this.eventEmitter = Platform.select({
-      ios: new NativeEventEmitter(NativeModules.MParticle),
-      android: DeviceEventEmitter
-    })
-  }
+  static eventEmitter = Platform.select({ // eslint-disable-line
+    ios: new NativeEventEmitter(NativeModules.MParticle),
+    android: DeviceEventEmitter
+  })
 
   /**
    * Subscribes to the specific SDK event.
@@ -650,6 +648,18 @@ class AppBoy {
    */
   static requestBrazeContentCardsRefresh () {
     NativeModules.MParticle.requestContentCardsRefresh()
+  }
+
+  static logBrazeContentCardImpression (cardId) {
+    NativeModules.MParticle.logContentCardImpression(cardId)
+  }
+
+  static logBrazeContentCardClicked (cardId) {
+    NativeModules.MParticle.logContentCardClicked(cardId)
+  }
+
+  static logBrazeContentCardDismissed (cardId) {
+    NativeModules.MParticle.logContentCardDismissed(cardId)
   }
 }
 

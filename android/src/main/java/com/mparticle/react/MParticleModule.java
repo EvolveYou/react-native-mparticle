@@ -209,6 +209,39 @@ public class MParticleModule extends ReactContextBaseJavaModule {
         return mappedCard;
     }
 
+    private Card getCardById(String id) {
+        for (Card card : mContentCards) {
+            if (card.getId().equals(id)) {
+                return card;
+            }
+        }
+        return null;
+    }
+
+    @ReactMethod
+    private void logContentCardImpression(String id) {
+        Card card = getCardById(id);
+        if (card != null) {
+            card.logImpression();
+        }
+    }
+
+    @ReactMethod
+    private void logContentCardClicked(String id) {
+        Card card = getCardById(id);
+        if (card != null) {
+            card.logClick();
+        }
+    }
+
+    @ReactMethod
+    private void logContentCardDismissed(String id) {
+        Card card = getCardById(id);
+        if (card != null) {
+            card.setDismissed(true);
+        }
+    }
+
     @ReactMethod
     public void setUserAttribute(final String userId, final String userAttribute, final String value) {
         MParticleUser selectedUser = MParticle.getInstance().Identity().getUser(parseMpid(userId));
