@@ -627,12 +627,10 @@ class Event {
 }
 
 class AppBoy {
-  constructor () {
-    this.eventEmitter = Platform.select({
-      ios: new NativeEventEmitter(NativeModules.MParticle),
-      android: DeviceEventEmitter
-    })
-  }
+  static eventEmitter = Platform.select({ // eslint-disable-line
+    ios: new NativeEventEmitter(NativeModules.MParticle),
+    android: DeviceEventEmitter
+  })
 
   /**
    * Subscribes to the specific SDK event.
@@ -703,7 +701,7 @@ const MParticle = {
   MParticleError,
   GDPRConsent,
   CCPAConsent,
-  AppBoy: new AppBoy(),
+  AppBoy,
 
   logEvent,             // Methods
   logMPEvent,
